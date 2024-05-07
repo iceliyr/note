@@ -1,0 +1,268 @@
+- 概述：
+
+  - 定义：Servlet  (server applet) 是运行在服务端(tomcat)的Java小程序，是sun公司提供一套定义动态资源规范，从代码层面上来讲Servlet就是一个接口
+
+  - 作用：用来接收、处理客户端请求、响应给浏览器的动态资源，在整个Web应用中，Servlet主要负责接收处理请求、协同调度功能以及响应数据。我们可以把Servlet称为Web应用中的控制器
+
+- 接口配置方式
+
+  - XML
+
+    - 类
+
+      public class UserServlet  extends HttpServlet {
+          @Override
+          protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+              // 获取请求中的参数
+              String username = req.getParameter("username");
+              if("atguigu".equals(username)){
+                  //通过响应对象响应信息
+                  resp.getWriter().write("NO");
+              }else{
+                  resp.getWriter().write("YES");
+              }
+          }
+      }
+
+      - 自定义一个类,要继承HttpServlet类
+
+      - 重写service方法,该方法主要就是用于处理用户请求的服务方法
+
+      - HttpServletRequest 代表请求对象,是有请求报文经过tomcat转换而来的,通过该对象可以获取请求中的信息
+
+      - HttpServletResponse 代表响应对象,该对象会被tomcat转换为响应的报文,通过该对象可以设置响应中的信息
+
+      - Servlet对象的生命周期(创建,初始化,处理服务,销毁)是由tomcat管理的,无需我们自己new
+
+      - HttpServletRequest HttpServletResponse 两个对象也是有tomcat负责转换,在调用service方法时传入给我们用的
+
+    - XML文件
+
+      <?xml version="1.0" encoding="UTF-8"?>
+      <web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_5_0.xsd"
+               version="5.0">
+          <servlet>
+              <!--给UserServlet起一个别名-->
+              <servlet-name>userServlet</servlet-name>
+              <servlet-class>com.atguigu.servlet.UserServlet</servlet-class>
+          </servlet>
+          <servlet-mapping>
+              <!--关联别名和映射路径-->
+              <servlet-name>userServlet</servlet-name>
+              <!--可以为一个Servlet匹配多个不同的映射路径,但是不同的Servlet不能使用相同的url-pattern-->
+              <url-pattern>/userServlet</url-pattern>
+             <!-- <url-pattern>/userServlet2</url-pattern>-->
+              <!--
+                  /        表示通配所有资源,不包括jsp文件
+                  /*       表示通配所有资源,包括jsp文件
+                  /a/*     匹配所有以a前缀的映射路径
+                  *.action 匹配所有以action为后缀的映射路径
+              -->
+             <!-- <url-pattern>/*</url-pattern>-->
+          </servlet-mapping>
+
+      </web-app>
+
+      - Servlet并不是文件系统中实际存在的文件或者目录,所以为了能够请求到该资源,我们需要为其配置映射路径
+
+      - servlet的请求映射路径配置在web.xml中
+
+      - servlet-name作为servlet的别名,可以自己随意定义,见名知意就好
+
+      - url-pattern标签用于定义Servlet的请求映射路径
+
+      - 一个servlet可以对应多个不同的url-pattern
+
+      - 多个servlet不能使用相同的url-pattern
+
+      - url-pattern中可以使用一些通配写法
+
+        - /        表示通配所有资源,不包括jsp文件
+
+        - /*      表示通配所有资源,包括jsp文件
+
+        - /a/*     匹配所有以a前缀的映射路径
+
+        - *.action 匹配所有以action为后缀的映射路径
+
+  - 注解
+
+    - 语法
+      @WebServlet(
+              name = "userServlet",
+              //value = "/user",
+              urlPatterns = {"/userServlet1","/userServlet2","/userServlet"},
+              initParams = {@WebInitParam(name = "encoding",value = "UTF-8")},
+              loadOnStartup = 6
+      )
+      public class UserServlet  extends HttpServlet {
+          @Override
+          protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+              String encoding = getServletConfig().getInitParameter("encoding");
+              System.out.println(encoding);
+              // 获取请求中的参数
+              String username = req.getParameter("username");
+              if("atguigu".equals(username)){
+                  //通过响应对象响应信息
+                  resp.getWriter().write("NO");
+              }else{
+                  resp.getWriter().write("YES");
+              }
+          }
+      }
+
+    - WebServlet注解的属性
+
+      - name：指定 Servlet 的名称，可选属性
+        - 例如：@WebServlet(name = "MyServlet")
+
+      - value/urlPatterns：指定 Servlet 的访问 URL 路径，必填属性
+        - 例如：@WebServlet(value = "/myServlet") 或 @WebServlet(urlPatterns = {"/servlet1", "/servlet2"})
+
+      - displayName：指定 Servlet 的显示名称，可选属性
+        - 例如：@WebServlet(displayName = "My Servlet")
+
+      - description：指定 Servlet 的描述信息，可选属性
+        - 例如：@WebServlet(description = "This is my servlet")
+
+      - initParams：指定初始化参数，可选属性
+        - 例如：@WebServlet(initParams = {@WebInitParam(name = "param1", value = "value1"), @WebInitParam(name = "param2", value = "value2")})
+
+      - asyncSupported：指定 Servlet 是否支持异步操作，默认为 false，可选属性
+        - 例如：@WebServlet(asyncSupported = true)
+
+      - loadOnStartup：指定 Servlet 的启动顺序，可选属性
+        - 例如：@WebServlet(loadOnStartup = 1)
+
+      - smallIcon/largeIcon：指定 Servlet 的图标路径，可选属性
+        - 例如：@WebServlet(smallIcon = "/images/small-icon.png", largeIcon = "/images/large-icon.png")
+
+- Servlet容器相关类
+
+  - ServletContext：上下文对象,唯一
+
+    
+
+    - 作用：
+
+      - ServletContext对象为所有的Servlet所共享
+
+      - ServletContext可以为所有的Servlet提供初始配置参数
+
+  - ServletConfig：
+
+    - 作用：
+
+      - 为Servlet提供初始配置参数的一种对象,每个Servlet都有自己独立唯一的ServletConfig对象
+
+      - 容器会为每个Servlet实例化一个ServletConfig对象,并通过Servlet生命周期的init方法传入给Servlet作为属性
+
+    - 方法：![img](https://api2.mubu.com/v3/document_image/36804294-07b2-4bb0-b174-33ac83710d24-18846868.jpg)
+
+  - Servlet：规范接口
+
+  - GenericServlet：粗糙实现
+    - 作用：对Servlet接口一些固定功能的粗糙实现,以及对service方法的再次抽象声明,并定义了一些其他相关功能方法
+
+  - HttpServlet：增加更多的基础功能
+
+  - Servlet具体实例类
+
+    - 定义：Servlet对象是Servlet容器创建的，生命周期方法都是由容器(Tomcat)调用的
+
+    - 生命周期：![img](https://api2.mubu.com/v3/document_image/c52de80c-d45c-43a7-9481-ddcf44add7d2-18846868.jpg)
+
+  - 类与方法关系图![img](https://api2.mubu.com/v3/document_image/d425126d-673a-439b-9006-5343a8694ebc-18846868.jpg)
+
+- 请求/响应
+
+  - HttpServletRequest
+
+    - 获取请求行信息相关(方式,请求的url,协议及版本)![img](https://api2.mubu.com/v3/document_image/12d26f17-06aa-4965-82d5-2f83fce39cc6-18846868.jpg)
+
+    - 获得请求头信息相关![img](https://api2.mubu.com/v3/document_image/d5921988-6ac3-4de1-8dd7-b2e088c154fb-18846868.jpg)
+
+    - 获得请求行参数和请求体相关
+
+      
+
+      - 获取请求体信息：
+
+        - getReader() 方法：返回一个 BufferedReader 对象
+          BufferedReader reader = request.getReader();
+          String line;
+          StringBuilder requestBody = new StringBuilder();
+          while ((line = reader.readLine()) != null) {
+              requestBody.append(line);
+          }
+          String requestBodyString = requestBody.toString();
+
+        - getInputStream() 方法：返回一个 ServletInputStream 对象
+          ServletInputStream inputStream = request.getInputStream();
+          byte[] buffer = new byte[1024];
+          int bytesRead;
+          ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+          while ((bytesRead = inputStream.read(buffer)) != -1) {
+              byteArrayOutputStream.write(buffer, 0, bytesRead);
+          }
+          byte[] requestBodyBytes = byteArrayOutputStream.toByteArray();
+
+    - 其他API![img](https://api2.mubu.com/v3/document_image/d19134f6-0411-496e-bd96-d30db048283c-18846868.jpg)
+
+  - HttpServletResponse
+
+    - 设置响应行相关![img](https://api2.mubu.com/v3/document_image/29bc039f-baa3-47cb-9bbc-0de3b8d5a96a-18846868.jpg)
+
+    - 设置响应头相关![img](https://api2.mubu.com/v3/document_image/4264a5b1-ab35-4384-b7c7-10f0ff8f3007-18846868.jpg)
+
+    - 设置响应体相关![img](https://api2.mubu.com/v3/document_image/26822dec-93ac-4b0a-b63e-c6bbabfafb40-18846868.jpg)
+
+    - 其他API![img](https://api2.mubu.com/v3/document_image/6dbdb108-b532-4bbe-b2cb-8c97d5201677-18846868.jpg)
+
+- 请求转发和响应重定向
+
+  - 请求转发
+
+    
+
+    - 请求转发通过HttpServletRequest对象获取请求转发器实现
+
+    - 请求转发是服务器内部的行为,对客户端是屏蔽的
+
+    - 客户端只发送了一次请求,客户端地址栏不变
+
+    - 服务端只产生了一对请求和响应对象,这一对请求和响应对象会继续传递给下一个资源
+
+    - 因为全程只有一个HttpServletRequset对象,所以请求参数可以传递,请求域中的数据也可以传递
+
+    - 请求转发可以转发给其他Servlet动态资源,也可以转发给一些静态资源以实现页面跳转
+
+    - 请求转发可以转发给WEB-INF下受保护的资源
+
+    - 请求转发不能转发到本项目以外的外部资源
+
+  - 响应重定向
+
+    
+
+    - 响应重定向通过HttpServletResponse对象的sendRedirect方法实现
+
+    - 响应重定向是服务端通过302响应码和路径,告诉客户端自己去找其他资源,是在服务端提示下的,客户端的行为
+
+    - 客户端至少发送了两次请求,客户端地址栏是要变化的
+
+    - 服务端产生了多对请求和响应对象,且请求和响应对象不会传递给下一个资源
+
+    - 因为全程产生了多个HttpServletRequset对象,所以请求参数不可以传递,请求域中的数据也不可以传递
+
+    - 重定向可以是其他Servlet动态资源,也可以是一些静态资源以实现页面跳转
+
+    - 重定向不可以到给WEB-INF下受保护的资源
+
+    - 重定向可以到本项目以外的外部资源
+
+- 乱码
+
+  - 字符集的兼容性![img](./JavaWeb-Servlet.assets/ce91d8d2-6588-4468-a145-d3ceab1f1203-18846868.jpg)

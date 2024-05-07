@@ -363,6 +363,16 @@ git merge 分支名
 
 <img src="https://api2.mubu.com/v3/document_image/85c58d8f-cea7-4fd2-9af8-0f8059c6b2da-18846868.jpg" alt="img" style="zoom:50%;" />
 
+### 删除远程仓库
+
+1、点击settings
+
+![image-20240506224816537](./Git.assets/image-20240506224816537.png)
+
+2、拉到最底下，点击 Delete this repository
+
+![image-20240506225037901](./Git.assets/image-20240506225037901.png)
+
 ### 创建远程仓库别名
 
 - 1、复制远程库名字![img](https://api2.mubu.com/v3/document_image/3729d80c-4db4-4b6b-ae0b-a5c840eae5e9-18846868.jpg)
@@ -403,4 +413,3 @@ git merge 分支名
 
 ## GitLab
 
-- IDEA集成GitLab

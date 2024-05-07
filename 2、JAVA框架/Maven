@@ -1,0 +1,484 @@
+- 作用：专门用于 构建 和 管理Java相关项目的工具
+
+- 笔记：https://www.wolai.com/fbnhGx8eE9JfZugFpbCWmC
+
+- 配置Maven：
+
+  - 下载MAVEN：[Maven – Download Apache Maven](https://maven.apache.org/download.cgi)
+
+  - 配置环境变量![img](https://api2.mubu.com/v3/document_image/3ebcccd7-aaf4-47cc-ad8a-d4e21b0dc8b3-18846868.jpg)![img](https://api2.mubu.com/v3/document_image/903210d8-ac3d-4958-8d7a-ceafd7cfe056-18846868.jpg)
+
+  - 创建本地仓库文件夹：mvn_repo![img](https://api2.mubu.com/v3/document_image/3689f05d-fb71-4867-8bc4-938cd397669e-18846868.jpg)
+
+  - 配置本地仓库：修改 conf/settings.xml 中的 <localRepository> 为一个指定目录。![img](https://api2.mubu.com/v3/document_image/b9fa2ac2-e872-46aa-86c9-76e525a8a728-18846868.jpg)
+
+  - 配置阿里云私服：修改 conf/settings.xml 中的 <mirrors>标签![img](https://api2.mubu.com/v3/document_image/a6c069ff-afe4-4467-8389-d6feb58320ac-18846868.jpg)
+
+  - 配置jdk（非必要）![img](https://api2.mubu.com/v3/document_image/e3b7550c-2dbf-4383-8fdc-fd7a97a37e82-18846868.jpg)
+    <!--在profiles节点(标签)下添加jdk编译版本 268行附近-->
+    <profile>
+        <id>jdk-17</id>
+        <activation>
+          <activeByDefault>true</activeByDefault>
+          <jdk>17</jdk>
+        </activation>
+        <properties>
+          <maven.compiler.source>17</maven.compiler.source>
+          <maven.compiler.target>17</maven.compiler.target>
+          <maven.compiler.compilerVersion>17</maven.compiler.compilerVersion>
+        </properties>
+    </profile>
+
+  - IDEA配置Maven（全局）![img](https://api2.mubu.com/v3/document_image/c19f05c1-9f8b-436a-8d69-e6170f1a11cc-18846868.jpg)
+
+- 仓库：
+
+  - 中央库：maven社区（community）中心服务器，所有的maven资源都存储在这个服务器中。
+
+  - 远程库（私服）：除了中央库之外，中国有很多代理的远程库（镜像连接），例如：网易，阿里（速度最快的国内镜像代理）；每个公司还可以自己搭建自己的远程库，供公司人员使用。
+
+  - 本地库：所有经过代理，经过中央库使用的资源都会下载到本地库中。
+
+- java项目结构
+
+  - src
+
+    -  main（项目主要代码）              
+
+      - java# Java 源代码目录
+
+      - resources# 资源目录，存放配置文件、静态资源等
+
+        - log4j.properties          # 日志配置文件
+
+        - spring-mybatis.xml        # Spring Mybatis 配置文件
+
+        - static                    # 存放静态资源的目录
+
+          - css                   # 存放 CSS 文件的目录
+
+          - js                    # 存放 JavaScript 文件的目录
+
+          - images                # 存放图片资源的目录
+
+      -  webapp # 存放 WEB 相关配置和资源
+
+        - WEB-INF                   # 存放 WEB 应用配置文件
+
+          - web.xml               # Web 应用的部署描述文件
+
+          - classes               # 存放编译后的 class 文件
+
+        - index.html                # Web 应用入口页面
+
+    -    test（项目测试代码）                               
+
+      - java                          # 单元测试目录
+
+      - resources                     # 测试资源目录
+
+- （[pom.xml](https://blog.csdn.net/weixin_42601136/article/details/121806064)）
+
+  - 固定设置
+
+    <?xml version="1.0" encoding="UTF-8"?>
+    <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    ​    <modelVersion>4.0.0</modelVersion>
+
+    - POM模型版本：<modelVersion>4.0.0</modelVersion>
+
+  - 基础设置
+
+    - 父工程：<parent>
+
+      - <groupId>：指定父项目的 Group ID
+
+      - <artifactId>：指定父项目的 Artifact ID
+
+      - <version>：指定父项目的版本号
+
+      - <relativePath>（可选）：指定当前项目与父项目 pom.xml 文件的相对路径，如果省略该元素，则默认为 ../pom.xml，即父项目的 pom.xml 文件在当前项目的上一级目录中
+
+    - 定位坐标：<groupId><artifactId><version><packaging>
+
+      - （必须）<groupId> 一般是域名倒写：com.{公司/BU }.业务线.[子业务线]
+
+      - （必须）<artifactId>表示项目中不同模块
+
+      - （必须）<version>表示模块、项目的版本号
+
+        - 格式：主版本号.次版本号.修订号 
+
+          - 主版本号：当做了不兼容的 API 修改，或者增加了能改变产品方向的新功能
+
+          - 次版本号：当做了向下兼容的功能性新增（新增类、接口等）
+
+          - 修订号：修复 bug，没有修改方法签名的功能加强，保持 API 兼容性
+
+      - （非必选）<packaging>：识别maven项目类型
+
+        - jar：代表普通的Java工程，打包以后是.jar结尾的文件
+
+        - war：代表Java的web工程，打包以后.war结尾的文件
+
+        - pom：代表不会打包，用来做继承的父工程
+
+    - 依赖管理：<dependencies>
+
+      - <dependencies> ：一个容器元素，用于将多个 <dependency> 元素组织在一起
+
+      - <dependency>
+
+        - <groupId>：依赖库的组织标识符，通常是公司或组织的域名倒序
+
+        - <artifactId>：依赖库的名称，通常是库的名字或关键字
+
+        - <version>：依赖库的版本号
+
+        - <scope>：依赖的作用范围（编译、测试和运行）
+
+          - compile：默认值，编译、测试和运行时都可用
+
+          - provided：编译和测试时可用，但在运行时由容器或 JDK 提供
+
+          - runtime：测试和运行时可用，但不参与编译
+
+          - test：测试阶段可用，不参与编译和运行
+
+          - system：类似于 provided，但需要通过 <systemPath> 指定依赖的路径，不建议使用
+
+        - <type>：依赖类型
+
+          - jar：打包和分发 Java 应用程序的类和依赖库
+
+          - war：打包和部署 Web 应用程序，包括 Web 相关的资源和配置
+
+        - <exclusions>：排除掉不需要的依赖项
+
+          - 当我们引入一个第三方库时，这个库可能会依赖其他的库。如果这些库已经被我们的项目中的其他依赖项引入了，就会导致版本冲突和其他问题。为了避免这种情况，我们可以使用 <exclusions> 元素来排除掉我们不需要的依赖项
+
+          - 举个例子，假设我们的项目中已经引入了 spring-boot-starter-web，这个库已经包含了 spring-webmvc 和 spring-web 两个依赖项。如果我们还想引入一个特定版本的 spring-webmvc，就需要排除掉 spring-boot-starter-web 中的这两个依赖项
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-web</artifactId>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.springframework</groupId>
+                        <artifactId>spring-webmvc</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.springframework</groupId>
+                        <artifactId>spring-web</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-webmvc</artifactId>
+                <version>5.3.13.RELEASE</version>
+            </dependency>
+
+        - <optional> ：希望某些依赖项只在特定条件下才被引入（值：true/false）
+          - 假设我们正在开发一个基于 Redis 的缓存模块，但是如果用户不想使用 Redis，也可以使用内存缓存代替。为了支持这种场景，我们可以将 Redis 依赖项设置为可选依赖
+            <dependency>
+                <groupId>redis.clients</groupId>
+                <artifactId>jedis</artifactId>
+                <version>3.7.0</version>
+                <optional>true</optional>
+            </dependency>
+
+        - classifier：区分相同 groupId、artifactId 和 version 的不同打包类型或构建配置
+
+    - 属性配置：<properties>
+      - 举例![img](https://api2.mubu.com/v3/document_image/fe773f0c-f5f3-4357-9479-fe5012664623-18846868.jpg)![img](https://api2.mubu.com/v3/document_image/2f37703f-72c9-40f0-be78-662376360a08-18846868.jpg)
+
+    - 集中管理项目的依赖版本号：<dependencyManagement>
+
+      - 作用：在父项目中集中定义和管理依赖的版本号，然后在子项目中引用这些定义的版本号，而无需在每个子项目中重复声明版本号
+
+      - 举例：
+
+        - 父工程![img](https://api2.mubu.com/v3/document_image/9c34c22a-7d2f-484d-8c43-a0fcfb8568e3-18846868.jpg)
+
+        - 子工程![img](https://api2.mubu.com/v3/document_image/4400d80a-aa86-4805-a161-c377dcc0afc7-18846868.jpg)
+
+    - 声明多模块项目的结构：<modules>
+      - 举例：![img](https://api2.mubu.com/v3/document_image/6da206ad-e052-480b-9a69-9a77ec5dd978-18846868.jpg)
+
+  - 构建设置
+
+    - 配置项目的构建过程：<build>
+
+      - <sourceDirectory>：指定源代码目录，默认为 src/main/java
+
+      - <testSourceDirectory>：指定测试源代码目录，默认为 src/test/java
+
+      - <resources>：指定项目的资源文件目录
+
+      - <testResources>：指定测试资源文件目录
+
+      - <plugins>：定义构建过程中要使用的插件及其配置
+
+        - <plugins> ：包含一个或多个 <plugin> 元素，每个 <plugin> 元素用于配置一个插件
+
+        - <plugin>：一个插件
+
+          - <configuration> 元素用于配置插件的具体配置信息
+
+          - <excludes> 元素来排除某些文件或资源，确保它们不会包含在最终的构建结果中
+            - <exclude> ：每一个排除
+
+          - <executions> 元素用于配置插件的执行信息，例如执行目标等
+
+          - <dependencies> 元素用于配置插件的依赖信息，即插件本身所需要的其他依赖
+
+        - 举例：![img](https://api2.mubu.com/v3/document_image/034c1a3d-15a0-4dae-960f-01ece86bdcea-18846868.jpg)
+
+    - 配置项目的报告生成：<reporting>
+
+      - <outputDirectory>：指定报告的输出目录，默认为 target/site
+
+      - <plugins>：定义报告生成过程中要使用的插件及其配置
+
+  - 更多项目信息
+
+  - 环境设置
+
+  - 文件：![img](https://api2.mubu.com/v3/document_image/c6557709-dabd-4ce3-98a4-4c3ffe596a52-18846868.jpg)
+
+- 依赖管理
+
+  - 依赖传递
+    - 当一个模块或库 A 依赖于另一个模块或库 B，而 B 又依赖于模块或库 C，那么 A 会间接依赖于 C。这种依赖传递结构可以形成一个依赖树。当我们引入一个库或框架时，构建工具（如 Maven、Gradle）会自动解析和加载其所有的直接和间接依赖，确保这些依赖都可用。
+
+  - 解决依赖冲突
+
+    - 短路优先原则
+
+    - 依赖路径长度相同情况下，则“先声明优先”
+
+  - 依赖导入失败场景和解决方案
+
+    - 网络故障或仓库服务器宕机：检查网络连接和 Maven 仓库服务器状态
+
+    - 依赖项的版本号或配置文件中的版本号错误：确保依赖项的版本号与项目对应的版本号匹配
+
+    - 本地 Maven 仓库或缓存被污染或损坏：清除本地 Maven 仓库缓存
+
+      - 只要存在lastupdated缓存文件，刷新也不会重新下载。本地仓库中，根据依赖的gav属性依次向下查找文件夹，最终删除内部的文件，刷新重新下载即可
+
+      - 执行：.bat文件
+        @echo off
+        rem 这里写你的仓库路径
+        set REPOSITORY_PATH=D:\repository
+        rem 正在搜索...
+        for /f "delims=" %%i in ('dir /b /s "%REPOSITORY_PATH%\*lastUpdated*"') do (
+            del /s /q %%i
+        )
+        rem 搜索完毕
+        pause
+
+- 构建管理
+
+  - 周期：
+
+    
+
+    - 清理周期：主要是对项目编译生成文件进行清理
+      - 包含命令：clean
+
+    - 默认周期：定义了真正构件时所需要执行的所有步骤，它是生命周期中最核心的部分
+      - 包含命令：compile - test - package - install / deploy
+
+    - 报告周期
+
+      - 包含命令：site
+
+      - 打包: mvn clean package 本地仓库: mvn clean install
+
+  - 构建命令：
+
+    - mvn clean	清理编译或打包后的项目结构,删除target文件夹
+
+    - mvn compile	编译项目，生成target文件
+
+    - mvn test	执行测试源码 (测试)
+
+    - mvn site	生成一个项目依赖信息的展示页面
+
+    - mvn package	打包项目，生成war / jar 文件
+
+    - mvn install	打包后上传到maven本地仓库(本地部署)
+
+    - mvn deploy	只打包，上传到maven私服仓库(私服部署)
+
+  - 最佳使用
+
+    - 打包: mvn clean package
+
+    - 重新编译: mvn clean compile
+
+    - 本地部署: mvn clean install
+
+- 继承：消除重复配置
+
+  - 继承语法：
+
+    - 父工程
+
+      - 定位![img](https://api2.mubu.com/v3/document_image/6265c536-16cf-48a5-9953-176ae5b0e332-18846868.jpg)
+
+      - 声明![img](https://api2.mubu.com/v3/document_image/3f4c767e-d004-48c4-b8ee-b6d50c623079-18846868.jpg)
+
+    - 子工程
+
+      - 继承![img](https://api2.mubu.com/v3/document_image/dac9542f-e2cf-4b03-8f06-f34b26b5d055-18846868.jpg)
+
+      - 引用![img](https://api2.mubu.com/v3/document_image/3f730e3a-ea2c-49f9-96a7-2236a8f601ba-18846868.jpg)
+
+- 聚合：方便快速构建项目
+
+  - 作用：
+
+    - 统一管理子项目构建：通过聚合，可以将多个子项目组织在一起，方便管理和维护
+
+    - 优化构建顺序：通过聚合，可以对多个项目进行顺序控制，避免出现构建依赖混乱导致构建失败的情况
+
+  - 语法：
+    - 父工程![img](https://api2.mubu.com/v3/document_image/d38356f3-74ce-4c38-afb5-1a84b41dc551-18846868.jpg)
+
+- 打包springboot项目
+
+  - JAR与WAR
+
+    - JAR（普通的 Java 应用程序打包和部署）（微服务）
+
+      - 用途：JAR 文件通常用于打包 Java 应用程序的代码、类、资源文件等，是一种便于在不同环境中部署和运行 Java 应用的标准方式。
+
+      - 特点：JAR 文件是 Java 应用的标准打包格式，其中包含了编译后的 Java 类文件、资源文件、库文件等。可以通过命令行或其他方式直接运行 JAR 文件。
+
+    - WAR（ Web 应用程序的打包和部署）（完整小项目）
+
+      - 用途：WAR 文件通常用于打包 Web 应用程序，包括 Servlets、JSP 页面、HTML 文件、JavaScript 文件、样式表等，用于部署到 Java Web 容器（如 Tomcat、Jetty 等）中运行。
+
+      - 特点：WAR 文件是专门用于打包 Web 应用的归档文件，包含了 Web 应用的所有内容，并且具有特定的目录结构，例如 WEB-INF 目录用于存放配置文件、类文件等。
+
+  - Maven打包部署运行
+
+    - JAR
+
+      - 内置tomcat
+
+        - 打包
+
+          - 1、添加了插件
+            <build>
+            ​    <finalName>film</finalName>
+            ​    <plugins>
+            ​        <plugin>
+            ​            <groupId>org.springframework.boot</groupId>
+            ​            <artifactId>spring-boot-maven-plugin</artifactId>
+            ​            <configuration>
+            ​                <excludes>
+            ​                    <exclude>
+            ​                        <groupId>org.projectlombok</groupId>
+            ​                        <artifactId>lombok</artifactId>
+            ​                    </exclude>
+            ​                </excludes>
+            ​            </configuration>
+            ​        </plugin>
+            ​    </plugins>
+            ​</build>
+
+          - 2、点击clean与package![img](https://api2.mubu.com/v3/document_image/dd96d991-9973-43e6-c9d8-49acdbf86de8.png)
+
+        - 部署
+
+          - 1、安装JDK
+
+          - 2、安装MYSQL、Redis等中间件
+
+          - 3、将其上传到对应jdk版本的linux用户
+
+        - 运行、停止
+
+          - 前台运行：java -jar your-application.jar
+
+          - 前台停止：ctrl+c
+
+          - 后台运行：java -jar your-application.jar >your-application.log 2>&1 &
+
+          - java -jar school-0.0.1-SNAPSHOT.jar >school.log 2>&1 &
+
+          - java -jar film.jar >film.log 2>&1 &
+
+          - ps -ef | grep school-0.0.1-SNAPSHOT.jar
+
+          - 后台停止：
+
+            - 查看PID：ps -ef | grep your-application.jar
+
+            - 杀死进程：kill <PID>
+
+      - 非web项目
+
+    - WAR
+
+      - 内置tomcat
+
+        - 打包
+
+          - 0、添加标签：<packaging>war</packaging>
+
+          - 1、添加了插件
+            <build>
+            ​    <finalName>film</finalName>
+            ​    <plugins>
+            ​        <plugin>
+            ​            <groupId>org.springframework.boot</groupId>
+            ​            <artifactId>spring-boot-maven-plugin</artifactId>
+            ​            <configuration>
+            ​                <excludes>
+            ​                    <exclude>
+            ​                        <groupId>org.projectlombok</groupId>
+            ​                        <artifactId>lombok</artifactId>
+            ​                    </exclude>
+            ​                </excludes>
+            ​            </configuration>
+            ​        </plugin>
+            ​    </plugins>
+            ​</build>
+
+          - 2、点击clean与package![img](https://api2.mubu.com/v3/document_image/dd96d991-9973-43e6-c9d8-49acdbf86de8.png)
+
+        - 部署
+
+          - 1、安装JDK
+
+          - 2、安装MYSQL、Redis等中间件
+
+          - 3、将其上传到对应jdk版本的linux用户
+
+        - 运行
+
+          - 前台运行：java -jar your-application.war
+
+          - 前台停止：ctrl+c
+
+          - 后台运行：java -jar your-application.war >your-application.log 2>&1 &
+
+          - 后台停止：
+
+            - 查看PID：ps -ef | grep your-application.war
+
+            - 杀死进程：kill <PID>
+
+      - 外置tomcat：[5、Tomcat](https://mubu.com/doc5ZgGpqmxqM0) 
+
+        - 打包
+
+        - 部署
+
+        - 运行

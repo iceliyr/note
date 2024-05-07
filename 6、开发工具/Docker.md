@@ -356,7 +356,7 @@ docker run -d --name dd -p 8080:8080 --network=lyr docker-demo
 
 ### 部署java应用
 
-### 部署前端影院
+
 
 ### DockerCompase
 

@@ -1,0 +1,238 @@
+- 登录验证
+
+  - 1、创建接口：请求登录成功，生成令牌并返回（第一次请求）
+
+    
+
+    - jwt![img](https://api2.mubu.com/v3/document_image/bd1a3581-0a9f-424e-9000-2d22fb2a0360-18846868.jpg)
+
+  - 2、登录校验
+
+    
+
+    package com.itheima.filter;
+    import com.alibaba.fastjson.JSONObject;
+    import com.itheima.pojo.Result;
+    import com.itheima.utils.JwtUtils;
+    import lombok.extern.slf4j.Slf4j;
+    import org.springframework.util.StringUtils;
+    import javax.servlet.*;
+    import javax.servlet.annotation.WebFilter;
+    import javax.servlet.http.HttpServletRequest;
+    import javax.servlet.http.HttpServletResponse;
+    import java.io.IOException;
+    @Slf4j
+    @WebFilter(urlPatterns = "/*")
+    public class LoginCheckFilter implements Filter {
+    @Override
+        public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+    //转为http类，请求响应
+            HttpServletRequest req = (HttpServletRequest) request;
+            HttpServletResponse resp = (HttpServletResponse) response;        
+    //1.获取请求url。
+            String url = req.getRequestURL().toString();
+            [log.info](http://log.info/)("请求的url: {}",url);        
+    //2.判断请求url中是否包含login，如果包含，说明是登录操作，放行。        
+    if(url.contains("login")){
+                [log.info](http://log.info/)("登录操作, 放行...");
+                chain.doFilter(request,response);
+                return; 
+           }
+    //3.获取请求头中的令牌（token）。
+            String jwt = req.getHeader("token"); 
+      //4.判断令牌是否存在，如果不存在，返回错误结果（未登录）。
+            if(!StringUtils.hasLength(jwt)){
+               [log.info](http://log.info/)("请求头token为空,返回未登录的信息"); 
+               Result error = Result.error("NOT_LOGIN");
+                //手动转换 对象--json --------> 阿里巴巴fastJSON
+                String notLogin = JSONObject.toJSONString(error);
+                resp.getWriter().write(notLogin);
+                return;
+            }
+    //5.解析token，如果解析失败，返回错误结果（未登录）。
+            try {
+                JwtUtils.parseJWT(jwt); 
+           } catch (Exception e) {
+    //jwt解析失败
+                e.printStackTrace();
+               Result error = Result.error("NOT_LOGIN");
+                String notLogin = JSONObject.toJSONString(error);
+                resp.getWriter().write(notLogin); 
+                return;
+            }
+    //6.放行。
+            [log.info](http://log.info/)("令牌合法, 放行");
+      chain.doFilter(request, response);
+    ​    }
+    }
+
+    - 判断是否为login![img](https://api2.mubu.com/v3/document_image/76d338fd-ef09-4f16-bb9d-cda73b61d2d5-18846868.jpg)
+
+    - 判断是否包含token![img](https://api2.mubu.com/v3/document_image/27a8334c-7c1b-45f9-adba-cc6be2461f59-18846868.jpg)
+
+    - 判断是否token正确![img](https://api2.mubu.com/v3/document_image/85f2dcd3-ebac-4978-b874-1cb1c49ecfea-18846868.jpg)
+
+- Redis缓存
+
+  - 基于注解的Redis缓存
+
+    - 步骤
+
+      - 1、添加依赖
+        <dependency> 
+        ​   <groupId>org.springframework.boot</groupId>
+        ​    <artifactId>spring-boot-starter-data-redis</artifactId>
+        ​</dependency>
+
+      - 2、全局配置
+        spring.redis.host=127.0.0.1
+        spring.redis.port=6379
+        spring.redis.password=
+
+      - 3、启动类添加 @ EnableCaching
+
+      - 4、类实现序列化（字节流，便于存到缓存中，同时还能从缓存中反序列化）
+
+      - 5、在对应service配置cache相关注解
+
+    - cache注解
+
+      - 步骤：
+
+        - 1、启动类添加 @ EnableCaching![img](https://api2.mubu.com/v3/document_image/42539e26-a6e8-40db-8955-d1b9f1181679-18846868.jpg)
+
+        - 2、在相关service层添加 注解![img](https://api2.mubu.com/v3/document_image/9cabb169-fda3-421d-bf72-ae2b41534381-18846868.jpg)
+
+      - Cacheable注解（进行缓存）
+
+        - 作用：
+
+          - 用于类或方法（通常用在数据查询方法上），用于对方法结果进行缓存存储
+
+          - 先进行缓存查询，如果为空则进行方法查询，并将结果进行缓存；如果缓存中有数据，不进行方法查询，而是直接使用缓存数据
+
+        - 属性：@ Cacheable(属性="属性值", ...)![img](https://api2.mubu.com/v3/document_image/d111592f-0134-417a-8f8b-c340188fa3d0-18846868.jpg)![img](https://api2.mubu.com/v3/document_image/5eef73a5-9544-4789-abe7-70408a0bf739-18846868.jpg)
+
+      - CachePut注解（更新缓存）
+        - 属性：![img](https://api2.mubu.com/v3/document_image/d111592f-0134-417a-8f8b-c340188fa3d0-18846868.jpg)
+
+      - CacheEvict注解（删除缓存）
+
+        - 属性：![img](https://api2.mubu.com/v3/document_image/d111592f-0134-417a-8f8b-c340188fa3d0-18846868.jpg)
+
+        - 新属性
+
+          - allEntries属性： allEntries属性表示是否清除指定缓存空间中的所有缓存数据，默认值为false（即默认只删除指定key对应的缓存数据）
+
+          - beforeInvocation属性：beforeInvocation属性表示是否在方法执行之前进行缓存清除，默认值为false（即默认在执行方法后再进行缓存清除）
+
+      - Caching注解（复杂的缓存管理）
+
+        - 意义：针对复杂规则的数据缓存管理，可以作用于类或方法，在Caching注解内部包含有Cacheable、put和evict三个属性，分别对应于@Cacheable、@CachePut和@ CacheEvict三个注解
+
+        - 举例：![img](https://api2.mubu.com/v3/document_image/ae475a40-f463-4690-8b43-1d1b4dd0227f-18846868.jpg)
+
+      - CacheConfig注解（统筹管理）
+
+        - 作用：统筹管理类中所有使用@Cacheable、@CachePut和@ CacheEvict注解标注方法中的公共属性，这些公共属性包括有cacheNames、keyGenerator、cacheManager和cacheResolver。
+
+        - 举例![img](https://api2.mubu.com/v3/document_image/5afa67cf-c27c-4295-ab21-047c52c1cfa7-18846868.jpg)
+
+      - 案例：[SpringBoot项目中使用缓存Cache](https://juejin.cn/post/7220292698854752313)
+
+  - 基于API的Redis缓存
+
+    - 步骤：
+
+      - 1、添加依赖
+        <dependency> 
+        ​   <groupId>org.springframework.boot</groupId>
+        ​    <artifactId>spring-boot-starter-data-redis</artifactId>
+        ​</dependency>
+
+      - 2、全局配置
+        spring.redis.host=127.0.0.1
+        spring.redis.port=6379
+        spring.redis.password=
+
+      - 3、定义实体类
+
+        - Builder注解可能会导致修改失败
+
+        - 实现序列化接口：implements Serializable
+
+      - 4、创建相应的Mapper
+
+      - （创建自定义RedisTemplate）![img](https://api2.mubu.com/v3/document_image/2de11b45-9604-497d-b266-e5145eed53b0-18846868.jpg)
+
+      - 5、创建对应的Service
+
+        - 依赖注入RedisTemplate
+
+        - 调用
+
+    - 默认RedisTemplate
+
+      - RedisTemplate类源码
+
+        - 使用RedisTemplate进行Redis数据缓存操作时，内部默认使用的是JdkSerializationRedisSerializer序列化方式，所以进行数据缓存的实体类必须实现JDK自带的序列化接口（例如Serializable）
+
+        - 使用RedisTemplate进行Redis数据缓存操作时，如果自定义了缓存序列化方式defaultSerializer，那么将使用自定义的序列化方式
+
+    - 自定义RedisTemplate
+
+      - RedisAutoConfiguration（自定义依据）
+
+        - (1) 在Redis自动配置类中，通过Redis连接工厂RedisConnectionFactory初始化了一个RedisTemplate；该类上方添加了@ConditionalOnMissingBean注解（顾名思义，当某个Bean不存在时生效），用来表明如果开发者自定义了一个名为redisTemplate的Bean，则该默认初始化的RedisTemplate会被覆盖。
+
+        - (2) 如果想要使用自定义序列化方式的RedisTemplate进行数据缓存操作，可以参考上述核心代码创建一个名为redisTemplate的Bean组件，并在该组件中设置对应的序列化方式即可。
+
+      - 代码：在项目中创建创建一个Redis自定义配置类RedisConfig，通过@ Configuration注解定义了一个RedisConfig配置类，并使用@ Bean注解注入了一个默认名称为方法名的redisTemplate组件（注意，该Bean组件名称必须是redisTemplate）；在定义的Bean组件中，自定义了一个RedisTemplate，使用自定义的Jackson2JsonRedisSerializer数据序列化方式；在定制序列化方式中，定义了一个ObjectMapper用于进行数据转换设置。
+        @Bean
+            public RedisTemplate<Object, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
+                RedisTemplate<Object, Object> template = new RedisTemplate();
+                template.setConnectionFactory(redisConnectionFactory);
+                // 使用JSON格式序列化对象，对缓存数据key和value进行转换
+                Jackson2JsonRedisSerializer jacksonSeial = new Jackson2JsonRedisSerializer(Object.class);
+                // 解决查询缓存转换异常的问题
+                ObjectMapper om = new ObjectMapper();
+                om.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
+                om.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
+                jacksonSeial.setObjectMapper(om);
+                // 设置RedisTemplate模板API的序列化方式为JSON 
+               template.setDefaultSerializer(jacksonSeial);
+        ​        return template;
+        ​    }
+
+    - 自定义RedisCacheManager
+
+      - 原理：
+
+        - 1. Spring Boot整合Redis组件提供的缓存自动配置类RedisCacheConfiguration,其内部是通过Redis连接工厂RedisConnectionFactory定义了一个缓存管理器RedisCacheManager；同时定制RedisCacheManager时，也默认使用了JdkSerializationRedisSerializer序列化方式。
+
+          
+
+        - 2. 如果想要使用自定义序列化方式的RedisCacheManager进行数据缓存操作，可以创建一个名为cacheManager的Bean组件，并在该组件中设置对应的序列化方式即可。
+
+          
+
+      - 代码：
+        @Bean
+        public RedisCacheManager cacheManager(RedisConnectionFactory redisConnectionFactory) {
+            // 分别创建String和JSON格式序列化对象，对缓存数据key和value进行转换 
+           RedisSerializer<String> strSerializer = new StringRedisSerializer();
+            Jackson2JsonRedisSerializer jacksonSeial = new Jackson2JsonRedisSerializer(Object.class);
+            // 解决查询缓存转换异常的问题
+            ObjectMapper om = new ObjectMapper();
+            om.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
+            om.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
+            jacksonSeial.setObjectMapper(om);
+            // 定制缓存数据序列化方式及时效 
+           RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
+                    .entryTtl(Duration.ofDays(1))
+                    .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(strSerializer))
+                    .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(jacksonSeial))
+                    .disableCachingNullValues();
+            RedisCacheManager cacheManager = RedisCacheManager.builder(redisConnectionFactory).cacheDefaults(config).build();
+        ​    return cacheManager;
+        ​}
